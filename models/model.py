@@ -27,6 +27,13 @@ class SLM(torch.nn.Module):
         features, pulsar_data = x
         RM_real, VTEC, Bpar, z = torch.transpose(pulsar_data, 0, 1)
         H = self.linear_layers(features)
+        
+        #rescale to 450 mean
+        H_transformed = torch.tanh(H)
+        transformed_mean = H_transformed.mean().item()
+        scale_factor = 450. / transformed_mean
+        shifted_scaled_H = H_transformed * scale_factor
+        H = shifted_scaled_H
+        
         RM_computed = Bpar*VTEC*2.62e-6/(1 - (self.R*torch.sin(z)/(self.R+H))**2)**0.5
         return RM_computed[0], RM_real
-

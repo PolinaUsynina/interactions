@@ -134,7 +134,7 @@ class TestPipeline(L.LightningModule):
         tensors = self.all_gather(tensors)
         return torch.cat([t for t in tensors])
 
-    def test_step(self, batch):git
+    def test_step(self, batch):
         RM_computed, RM_real = self.model(batch)
         out_class = torch.argmax(out, dim=1)
         self.test_outputs.append({
