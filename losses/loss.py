@@ -1,11 +1,11 @@
 from torch import nn
 import torch
 
-
-class TorchLoss(nn.Module):
+        
+class RMLoss(nn.Module):
     def __init__(self):
-        super().__init__()
-        self.loss = nn.CrossEntropyLoss()
-
-    def forward(self, preds, target):
-        return self.loss(preds, target)
+        super(RMLoss, self).__init__()
+        
+    def forward(self, RM_computed, RM_real):
+        loss = torch.mean(torch.abs(RM_computed - RM_real))
+        return loss

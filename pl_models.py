@@ -5,11 +5,11 @@ import pandas as pd
 import torch
 from torch import optim
 from torchmetrics import MetricCollection
-from torchmetrics.classification import MulticlassAccuracy
+from torchmetrics.regression import MeanAbsoluteError
 from transformers import get_cosine_schedule_with_warmup
 
-from losses.loss import TorchLoss
-from models.model import TorchModel
+from losses.loss import RMLoss
+from models.model import SLM
 
 
 class TrainPipeline(L.LightningModule):
@@ -17,19 +17,20 @@ class TrainPipeline(L.LightningModule):
         super().__init__()
         self.config = config
 
-        self.model = TorchModel(**config['model'])
+        self.model = SLM()
+        
         if config['weights'] is not None:
             state_dict = torch.load(config['weights'], map_location='cpu')['state_dict']
             self.load_state_dict(state_dict, strict=True)
-        self.criterion = TorchLoss()
-        metrics = MetricCollection([MulticlassAccuracy(num_classes=config['model']['output'])])
+            
+        self.criterion = RMLoss()
+        metrics = MetricCollection([MeanAbsoluteError()])
         self.train_metrics = metrics.clone(postfix="/train")
         self.valid_metrics = metrics.clone(postfix="/val")
 
         self.train_loader = train_loader
         self.val_loader = val_loader
-        # In case of DDP
-        # self.num_training_steps = math.ceil(len(self.train_loader) / len(config['trainer']['devices']))
+        
         self.num_training_steps = len(self.train_loader)
 
         self.save_hyperparameters(config)
@@ -46,6 +47,12 @@ class TrainPipeline(L.LightningModule):
                 momentum=0.9, nesterov=True,
                 **self.config['optimizer_params']
             )
+        elif self.config['optimizer'] == "LBFGS":
+            optimizer = optim.LBFGS(
+                filter(lambda p: p.requires_grad, self.model.parameters()),
+                **self.config['optimizer_params']
+            )
+            
         else:
             raise ValueError(f"Unknown optimizer name: {self.config['optimizer']}")
 
@@ -88,20 +95,19 @@ class TrainPipeline(L.LightningModule):
         return self.val_loader
 
     def training_step(self, batch, batch_idx):
-        x, y = batch
-        out = self.model(x)
-        loss = self.criterion(out, y)
+        RM_computed, RM_real = self.model(batch)
+        loss = self.criterion(RM_computed, RM_real)
 
         self.log("Loss/train", loss, prog_bar=True)
-        self.train_metrics.update(out, y)
+        self.train_metrics.update(RM_computed, RM_real)
         return loss
 
     def validation_step(self, batch, batch_idx):
-        x, y = batch
-        out = self.model(x)
-        loss = self.criterion(out, y)
+        RM_computed, RM_real = self.model(batch)
+        loss = self.criterion(RM_computed, RM_real)
+        
         self.log("Loss/val", loss, prog_bar=True)
-        self.valid_metrics.update(out, y)
+        self.valid_metrics.update(RM_computed, RM_real)
 
     def on_training_epoch_end(self):
         train_metrics = self.train_metrics.compute()
@@ -119,7 +125,7 @@ class TestPipeline(L.LightningModule):
         super().__init__()
         self.config = config
 
-        self.model = TorchModel(**config['model'])
+        self.model = SLM()
         state_dict = torch.load(config['weights'], map_location='cpu')['state_dict']
         self.load_state_dict(state_dict, strict=True)
         self.test_outputs = []
@@ -128,9 +134,8 @@ class TestPipeline(L.LightningModule):
         tensors = self.all_gather(tensors)
         return torch.cat([t for t in tensors])
 
-    def test_step(self, batch):
-        x, ids = batch
-        out = self.model(x)
+    def test_step(self, batch):git
+        RM_computed, RM_real = self.model(batch)
         out_class = torch.argmax(out, dim=1)
         self.test_outputs.append({
             "out_class": out_class,

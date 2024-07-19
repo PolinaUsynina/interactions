@@ -19,7 +19,7 @@ trainer:
   precision: 32
   sync_batchnorm: True
   gradient_clip_val: 1.0
-  max_epochs: 5
+  max_epochs: 10
   accelerator: auto
   #  accelerator: gpu
   devices: auto
@@ -41,7 +41,7 @@ scheduler_params:
   warmup_epochs: 0
 
 checkpoint:
-  monitor: MeanAbsoluteError/val
+  monitor: MulticlassAccuracy/val
   filename: model
   mode: max
 

@@ -1,0 +1,30 @@
+checkpoint:
+  filename: model
+  mode: max
+  monitor: MeanAbsoluteError/val
+data_path: data
+dataloader:
+  batch_size: 8
+  num_workers: 2
+exp_name: baseline
+exp_path: Experiments
+optimizer: adam
+optimizer_params:
+  lr: 0.001
+  weight_decay: 0.0001
+project: neural_iono
+save_path: Experiments\neural_iono\baseline
+scheduler: cosine
+scheduler_params:
+  warmup_epochs: 0
+test: test.csv
+train: train.csv
+trainer:
+  accelerator: auto
+  devices: auto
+  gradient_clip_val: 1.0
+  max_epochs: 5
+  precision: 32
+  sync_batchnorm: true
+val: val.csv
+weights: null

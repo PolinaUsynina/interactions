@@ -1,63 +1,51 @@
 import os
 
-import cv2
 import pandas as pd
 import torch
 from torch.utils.data import Dataset, DataLoader
-
-from datasets.transforms import preprocess, transforms
 
 
 class TrainDataset(Dataset):
     def __init__(self, config, mode='train'):
         super().__init__()
         self.config = config
-        self.annotations = []
+        
         self.mode = mode
-        self.img_dir = os.path.join(
-            config["data_path"],
-            self.config['images'] if (mode == 'train') else self.config['val_images']
-        )
+              
         csv_path = os.path.join(
-            config["annotation_path"],
-            self.config['annotations'] if (mode == 'train') else self.config['val_annotations']
+            config["data_path"],
+            self.config['train'] if (mode == 'train') else self.config['val']
         )
-        self._read_csv(csv_path)
-        self._init_transforms()
+        
+        self.dataset = self._read_csv(csv_path)
+        
 
     def _read_csv(self, csv_path):
-        df = pd.read_csv(csv_path)
-        for idx, row in df.iterrows():
-            self.annotations.append([row['filename'], int(row['label'])])
-
-    def _init_transforms(self):
-        self.preprocess = preprocess(self.config['preprocess'])
-        self.transforms = None if self.mode != "train" else transforms(self.config['transforms'])
+        df = pd.read_csv(csv_path, sep=' ', names=['X-ray B', 'SYM-H', 'Sunspots', 'F10.7', 'DST', 'Kp', 'LST', 'RM_real', 'VTEC', 'Bpar', 'z'])
+        return df
 
     def __len__(self):
-        return len(self.annotations)
-
-    def load_sample(self, idx):
-        image_path, label = self.annotations[idx]
-        if not os.path.exists(os.path.join(self.img_dir, image_path)):
-            raise ValueError(f"{os.path.join(self.img_dir, image_path)} doesn't exist")
-        image = cv2.imread(os.path.join(self.img_dir, image_path))
-        return image, label
+        return len(self.dataset)
 
     def __getitem__(self, idx):
-        image, label = self.load_sample(idx)
-        if self.transforms is not None:
-            image = self.transforms(image=image)['image']
-        image = self.preprocess(image=image)['image']
-        label = torch.as_tensor([label]).long()
+        
+        pulsar_cols = ['RM_real', 'VTEC', 'Bpar', 'z']
+        features_cols = [col for col in self.dataset.columns if col not in pulsar_cols]
+        
+        pulsar_data_arr = self.dataset[pulsar_cols].iloc[idx].to_numpy()
+        features_arr = self.dataset[features_cols].iloc[idx].to_numpy()
+        
+        pulsar_data = torch.from_numpy(pulsar_data_arr).to(torch.float32)
+        features = torch.from_numpy(features_arr).to(torch.float32)
         idx = torch.as_tensor(idx).long()
-        return {'image': image, 'label': label, 'idx': idx}
+        
+        return {'features': features, 'pulsar_data': pulsar_data, 'idx': idx}
 
 
 def collate_fn(batch):
-    image = torch.stack([b['image'] for b in batch], dim=0)
-    label = torch.stack([b['label'] for b in batch], dim=0).reshape(-1)
-    return image, label
+    features = torch.stack([b['features'] for b in batch], dim=0)
+    pulsar_data = torch.stack([b['pulsar_data'] for b in batch], dim=0)
+    return features, pulsar_data
 
 
 def get_train_dl_ds(
@@ -75,3 +63,5 @@ def get_train_dl_ds(
         **config['dataloader']
     )
     return dataloader, dataset
+
+

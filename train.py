@@ -8,7 +8,6 @@ import yaml
 from lightning.pytorch import seed_everything, Trainer
 from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 from lightning.pytorch.loggers import TensorBoardLogger
-# from lightning.pytorch.strategies import DDPStrategy
 from lightning.pytorch.utilities import rank_zero_only
 
 from datasets.train import get_train_dl_ds
@@ -99,7 +98,6 @@ def train(args=None):
     ]
 
     trainer = Trainer(
-        # strategy=DDPStrategy(find_unused_parameters=False),
         callbacks=callbacks,
         logger=tensorboard_logger,
         **config['trainer']
