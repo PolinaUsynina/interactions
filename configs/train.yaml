@@ -12,7 +12,7 @@ val: "val.csv"
 test: "test.csv"
 
 # exp params
-exp_name: baseline
+exp_name: target1_5_e-3
 project: neural_iono
 
 trainer:
@@ -20,8 +20,8 @@ trainer:
   sync_batchnorm: True
   gradient_clip_val: 1.0
   max_epochs: 5
-  accelerator: auto
-  #  accelerator: gpu
+  #accelerator: auto
+  accelerator: gpu
   devices: auto
   #  devices: [0]
 
@@ -31,10 +31,9 @@ dataloader:
   batch_size: 8
   num_workers: 2
 
-optimizer: adam
+optimizer: LBGFS
 optimizer_params:
   lr: 0.001
-  weight_decay: 0.0001
 
 scheduler: cosine
 scheduler_params:

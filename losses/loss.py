@@ -4,7 +4,7 @@ import torch
         
 class RMLoss(nn.Module):
     def __init__(self):
-        super(RMLoss, self).__init__()
+        super().__init__()
         
     def forward(self, RM_computed, RM_real):
         loss = torch.mean(torch.abs(RM_computed - RM_real))
