@@ -1,0 +1,22 @@
+# main paths
+data_path: "data/J0332_train_val_test"
+
+# test
+test: "J0332_test.csv"
+
+# exp params
+save_path: "Experiments/neural_iono/model_J0332"
+test_name: val
+
+trainer:
+  precision: 32
+  accelerator: auto
+  #  accelerator: gpu
+  devices: auto
+  #  devices: [0]
+
+weights: "Experiments/neural_iono/model_J0332/model.ckpt"
+
+dataloader:
+  batch_size: 8
+  num_workers: 2
