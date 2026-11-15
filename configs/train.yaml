@@ -1,18 +1,18 @@
 # main paths
-data_path: "data/J0332_train_val_test"
+data_path: "data/"
 exp_path: "Experiments"
 
 # train
-train: "J0332_train.csv"
+train: "J0332_full.csv"
 
 # validation
-val: "J0332_val.csv"
+val: "J0814_full.csv"
 
 # test
-test: "J0332_test.csv"
+test: "J2219_full.csv"
 
 # exp params
-exp_name: model_J0332_5
+exp_name: 1_vs_1
 project: neural_iono
 
 trainer:
@@ -20,8 +20,8 @@ trainer:
   sync_batchnorm: True
   gradient_clip_val: 1.0
   max_epochs: 5
-  #accelerator: auto
-  accelerator: gpu
+  accelerator: auto
+  #accelerator: gpu
   devices: auto
   #  devices: [0]
 
@@ -33,7 +33,7 @@ dataloader:
 
 optimizer: adam
 optimizer_params:
-  lr: 0.01
+  lr: 0.001
   weight_decay: 0.01
 
 scheduler: cosine
