@@ -7,17 +7,13 @@ from datasets.train import TrainDataset
 
 
 class TestDataset(TrainDataset):
-    def __init__(self, config, mode='test'):
-        super().__init__(config, mode='test')
-        self.mode = mode
-        self.config = config
-              
-        csv_path = os.path.join(
-            config["data_path"],
-            self.config['test']
+    """Dataset для инференса: только transform, без re-fit scaler-ов."""
+    def __init__(self, config, feature_scaler=None, target_scaler=None):
+        super().__init__(
+            config, mode='test',
+            feature_scaler=feature_scaler,
+            target_scaler=target_scaler,
         )
-        
-        self.dataset = self._read_csv(csv_path)
 
 
 def collate_fn(batch):
@@ -26,8 +22,12 @@ def collate_fn(batch):
     return features, pulsar_data
 
 
-def get_inference_dl_ds(config):
-    dataset = TestDataset(config)
+def get_inference_dl_ds(config, feature_scaler=None, target_scaler=None):
+    dataset = TestDataset(
+        config,
+        feature_scaler=feature_scaler,
+        target_scaler=target_scaler,
+    )
 
     dataloader = DataLoader(
         dataset,
@@ -35,5 +35,5 @@ def get_inference_dl_ds(config):
         collate_fn=collate_fn,
         **config['dataloader']
     )
-    
+
     return dataloader, dataset

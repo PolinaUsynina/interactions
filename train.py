@@ -17,7 +17,6 @@ from pl_models import TrainPipeline
 def load_config(config_path):
     with open(config_path, 'r') as input_file:
         config = yaml.safe_load(input_file)
-
     return config
 
 
@@ -38,7 +37,6 @@ def check_dir(dirname):
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description='Template for training networks with pytorch lightning.')
-
     parser.add_argument('config', help='path to yaml config file', default='configs/train.yaml')
     return parser.parse_args(args)
 
@@ -50,7 +48,7 @@ def train(args=None):
         args = parse_args(args)
         config = load_config(args.config)
     else:
-        config=args
+        config = args
 
     config['save_path'] = os.path.join(
         config['exp_path'],
@@ -66,14 +64,18 @@ def train(args=None):
         name='metrics'
     )
 
-    train_loader, _ = get_train_dl_ds(
+    # --- ИЗМЕНЕНО: сохраняем датасет train, чтобы взять его скейлеры для val ---
+    train_loader, train_ds = get_train_dl_ds(
         config,
         mode='train'
     )
 
+    # --- ИЗМЕНЕНО: передаём train-скейлеры в val (без re-fit на val!) ---
     val_loader, _ = get_train_dl_ds(
         config,
-        mode="val"
+        mode="val",
+        feature_scaler=train_ds.feature_scaler,
+        target_scaler=train_ds.target_scaler,
     )
 
     model = TrainPipeline(
@@ -87,7 +89,7 @@ def train(args=None):
         save_last=True,
         every_n_epochs=1,
         save_top_k=1,
-        save_weights_only=True,
+        save_weights_only=False,          # --- ИЗМЕНЕНО: сохранять target_mean/scale ---
         save_on_train_epoch_end=False,
         **config['checkpoint']
     )

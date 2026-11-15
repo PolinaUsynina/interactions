@@ -57,8 +57,7 @@ class TrainDataset(Dataset):
 
         if self.mode == 'train':
             noise_factor = 0.05
-            pulsar_dataset.loc[:, TARGET] += (
-                noise_factor * np.random.randn(len(pulsar_dataset[TARGET])))
+            pulsar_dataset[TARGET] = pulsar_dataset[TARGET] + noise_factor * np.random.randn(len(pulsar_dataset[TARGET]))
 
         pulsar_data_arr = pulsar_dataset.iloc[idx].to_numpy()
         features_arr = self.dataset[FEATURES].iloc[idx].to_numpy()

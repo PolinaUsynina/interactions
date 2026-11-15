@@ -2,17 +2,15 @@ import torch
 from torch import nn
 
 
-class SLM(torch.nn.Module):
+class PulsarNet(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
-        #define parameters
-        self.R = 6371.
-
         #define layers
-        self.linear_layers = nn.Sequential(  
-            #big
-            nn.Linear(7, 256),
+        self.trend_layer = nn.Linear(11, 1)
+        self.main_layers = nn.Sequential(  
+            
+            nn.Linear(11, 256),
             nn.BatchNorm1d(256),
             nn.ReLU(),
             nn.Linear(256, 128),
@@ -27,19 +25,17 @@ class SLM(torch.nn.Module):
             nn.Dropout(p=0.2),
             nn.Linear(32, 1)
         )
-
+        
+        
     def forward(self, x):
         features, pulsar_data = x
-        time, RM_real, RM_real_stat, VTEC, Bpar, z, target1_real = torch.transpose(pulsar_data, 0, 1)
         
-        #print("shape:", features.shape)
-        target1 = 3*torch.sigmoid(self.linear_layers(features))
-        
-        #k = -1.898627945760582858e-01
-        #b = 3.827098607097981358e+02
-        
-        #RM_computed = Bpar*VTEC*2.62e-6/(target1)**0.5
-        #RM_computed_stat = torch.log(RM_computed) - k*time - b
-        #return RM_computed_stat[0], RM_real
-        return target1.squeeze(), target1_real
+        RM_real = pulsar_data[:, 0]   
+        target_real = pulsar_data[:, 1]   
+
+        trend    = self.trend_layer(features)     
+        residual = self.main_layers(features)   
+        pred = (trend + residual).squeeze(-1)   
+
+        return pred, target_real
 
