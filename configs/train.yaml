@@ -1,6 +1,6 @@
 # main paths
 data_path: "data/"
-exp_path: "Experiments"
+exp_path: "/content/drive/MyDrive/data_for_iono/Experiments_t3"
 
 # train
 train: "J0332_full.csv"

@@ -1,22 +1,18 @@
 # main paths
-data_path: "data/J0332_train_val_test"
-
-# test
-test: "J0332_test.csv"
+data_path: "data/"          
+test: "J2219_full.csv"      
 
 # exp params
-save_path: "Experiments/neural_iono/model_J0332"
-test_name: val
+save_path: "/content/drive/MyDrive/data_for_iono/Experiments_t3/neural_iono/1_vs_1"  
+test_name: "inference_J2219"
 
 trainer:
   precision: 32
   accelerator: auto
-  #  accelerator: gpu
   devices: auto
-  #  devices: [0]
 
-weights: "Experiments/neural_iono/model_J0332/model.ckpt"
+weights: "/content/drive/MyDrive/data_for_iono/Experiments_t3/neural_iono/1_vs_1/model.ckpt" 
 
 dataloader:
-  batch_size: 8
+  batch_size: 128
   num_workers: 2

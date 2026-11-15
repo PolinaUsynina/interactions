@@ -168,28 +168,23 @@ class TestPipeline(L.LightningModule):
         computed, real = self.model(batch)
         
         self.test_outputs.append({
-            "computed": self._unscale(computed).cpu().detach().numpy(),
-            "real":     self._unscale(real).cpu().detach().numpy(),
+            "computed": self._unscale(computed).detach().cpu(), # тензоры, не numpy!
+            "real":     self._unscale(real).detach().cpu(),
         })
 
     def on_test_epoch_end(self):
-        all_test_outputs = self.all_gather(self.test_outputs)
-
-        if self.trainer.is_global_zero:
-            computed = torch.cat(
-                [o['computed'] for o in all_test_outputs], dim=0
-            ).cpu().detach().numpy()
-            real = torch.cat(
-                [o['real'] for o in all_test_outputs], dim=0
-            ).cpu().detach().numpy()
-
-            file_path = os.path.join(
-                self.config['save_path'],
-                self.config['test_name'],
-                "predictions.txt",
-            )
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
+        if not self.test_outputs:
+            return
             
-            np.savetxt(str(file_path), np.column_stack([computed, real]),
-                       header="computed real", comments="")
+        computed = torch.cat([o['computed'] for o in self.test_outputs]).numpy()
+        real     = torch.cat([o['real']     for o in self.test_outputs]).numpy()
+
+        file_path = os.path.join(
+            self.config['save_path'],
+            self.config['test_name'],
+            "predictions.txt",
+        )
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        np.savetxt(str(file_path), np.column_stack([computed, real]),
+                   header="computed real", comments="")

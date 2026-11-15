@@ -21,7 +21,7 @@ class TrainDataset(Dataset):
               
         csv_path = os.path.join(
             config["data_path"],
-            self.config['train'] if (mode == 'train') else self.config['test']
+            self.config[mode]
         )
         
         self.dataset = self._read_csv(csv_path)
