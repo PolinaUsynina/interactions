@@ -3,7 +3,7 @@ data_path: "data/"
 exp_path: "/content/drive/MyDrive/data_for_iono/Experiments_t3"
 
 # train
-train: "J0332_full.csv"
+train: ["J0332_full.csv", "J1932_full.csv"]
 
 # validation
 val: "J0814_full.csv"

@@ -23,8 +23,13 @@ class TrainDataset(Dataset):
             config["data_path"],
             self.config[mode]
         )
-        
+        ## train list
+        self.file_list = self.config['train'] if (mode == 'train') else self.config[mode]
+        if isinstance(self.file_list, str):
+            self.file_list = [self.file_list]
+            
         self.dataset = self._read_csv(csv_path)
+        ###
         
         ###  SCALING   ###
         if feature_scaler is None:
@@ -44,9 +49,19 @@ class TrainDataset(Dataset):
             self.dataset[[TARGET]].to_numpy())
         
 
-    def _read_csv(self, csv_path):
-        df = pd.read_csv(csv_path, sep=' ')
-        return df
+    #def _read_csv(self, csv_path):
+    #    df = pd.read_csv(csv_path, sep=' ')
+    #    return df
+    
+    def _read_csv(self, csv_paths):
+        dfs = []
+        for path in csv_paths:
+            full_path = os.path.join(self.config["data_path"], path)
+            df = pd.read_csv(full_path, sep=' ')
+            dfs.append(df)
+        
+        merged_df = pd.concat(dfs, axis=0, ignore_index=True)
+        return merged_df
 
     def __len__(self):
         return len(self.dataset)
