@@ -19,16 +19,12 @@ class TrainDataset(Dataset):
         
         self.mode = mode
               
-        csv_path = os.path.join(
-            config["data_path"],
-            self.config[mode]
-        )
         ## train list
         self.file_list = self.config['train'] if (mode == 'train') else self.config[mode]
         if isinstance(self.file_list, str):
             self.file_list = [self.file_list]
             
-        self.dataset = self._read_csv(csv_path)
+        self.dataset = self._read_csv(self.file_list)
         ###
         
         ###  SCALING   ###
